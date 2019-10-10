@@ -76,3 +76,4 @@ proc SDL_GL_SetAttribute*(attr: uint32; value: int) {.cdecl, importc: "SDL_GL_Se
 
 proc SDL_SetRelativeMouseMode*(enabled: int): int {.cdecl, importc: "SDL_SetRelativeMouseMode".}
 proc SDL_GL_SetSwapInterval*(interval: int) {.cdecl, importc: "SDL_GL_SetSwapInterval".}
+proc SDL_GL_SwapWindow*(window: ptr SDL_Window) {.cdecl, importc: "SDL_GL_SwapWindow".}

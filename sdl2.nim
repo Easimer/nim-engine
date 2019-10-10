@@ -29,6 +29,7 @@ proc create_window*(name: string, w: int, h: int): sdl_window =
 
   result.glctx = SDL_GL_CreateContext(result.wnd)
   discard SDL_SetRelativeMouseMode(SDL_TRUE)
+  SDL_GL_SetSwapInterval(-1)
 
 proc destroy_window*(window: sdl_window) =
   if window.glctx != nil:
@@ -37,3 +38,7 @@ proc destroy_window*(window: sdl_window) =
     SDL_DestroyRenderer(window.renderer)
   if window.wnd != nil:
     SDL_DestroyWindow(window.wnd)
+
+proc swap_buffers*(window: sdl_window) =
+  if window.wnd != nil:
+    SDL_GL_SwapWindow(window.wnd)

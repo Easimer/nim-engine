@@ -8,4 +8,5 @@ defer: sdl2.shutdown()
 let window = sdl2.create_window("Nim Engine", 640, 480)
 defer: sdl2.destroy_window(window)
 
+sdl2.swap_buffers(window)
 os.sleep(1000)
