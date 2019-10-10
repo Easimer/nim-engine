@@ -8,6 +8,7 @@ proc initialize_window() =
   var res = SDL_Init(SDL_INIT_EVERYTHING)
 
   let window = SDL_CreateWindow("Test", 10, 10, 800, 600, SDL_WINDOW_SHOWN)
+  let renderer = SDL_CreateRenderer(window, -1, SDL_RENDERER_ACCELERATED or SDL_RENDERER_PRESENTVSYNC)
   os.sleep(1000)
   SDL_DestroyWindow(window)
 
