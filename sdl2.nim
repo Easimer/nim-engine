@@ -49,8 +49,8 @@ proc SDL_CreateWindow*(title: cstring; x: int; y: int; w: int; h: int, flags: ui
 proc SDL_DestroyWindow*(window: ptr SDL_Window) {.cdecl, importc: "SDL_DestroyWindow".}
 
 # Renderer management
-proc SDL_CreateRenderer(window: ptr SDL_Window, index: int, flags: uint32): ptr SDL_Renderer {.cdecl, importc: "SDL_CreateRenderer".}
-proc SDL_DestroyRenderer(renderer: ptr SDL_Renderer) {.cdecl, importc: "SDL_DestroyRenderer".}
+proc SDL_CreateRenderer*(window: ptr SDL_Window; index: int; flags: uint32): ptr SDL_Renderer {.cdecl, importc: "SDL_CreateRenderer".}
+proc SDL_DestroyRenderer*(renderer: ptr SDL_Renderer) {.cdecl, importc: "SDL_DestroyRenderer".}
 
 # OpenGL
-proc SDL_GL_SetAttribute(attr: uint32, value: int) {.cdecl, importc: "SDL_GL_SetAttribute".}
+proc SDL_GL_SetAttribute*(attr: uint32; value: int) {.cdecl, importc: "SDL_GL_SetAttribute".}
