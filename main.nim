@@ -3,13 +3,9 @@
 import os
 import sdl2
 
-proc initialize_window() =
-  SDL_SetMainReady()
-  var res = SDL_Init(SDL_INIT_EVERYTHING)
+sdl2.init()
+defer: sdl2.shutdown()
+let window = sdl2.create_window("Nim Engine", 640, 480)
+defer: sdl2.destroy_window(window)
 
-  let window = SDL_CreateWindow("Test", 10, 10, 800, 600, SDL_WINDOW_SHOWN)
-  let renderer = SDL_CreateRenderer(window, -1, SDL_RENDERER_ACCELERATED or SDL_RENDERER_PRESENTVSYNC)
-  os.sleep(1000)
-  SDL_DestroyWindow(window)
-
-initialize_window()
+os.sleep(1000)

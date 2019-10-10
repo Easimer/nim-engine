@@ -1,56 +1,39 @@
 # === Copyright (c) 2019-2020 easimer.net. All rights reserved. ===
 
-{.passC: "-I/usr/include/SDL2/".}
-{.passL: "-lSDL2 -lrt".}
-{.deadCodeElim: on.}
-
-{.pragma: sdl2,
-   cdecl,
-   header: "<SDL.h>",
-   importc.}
+import sdl2/wrapper
 
 type
-  SDL_Window* = object
-  SDL_Renderer* = object
-  SDL_GLContext* = object
+  sdl_window = object
+    wnd : ptr SDL_Window
+    renderer : ptr SDL_Renderer
+    glctx : ptr SDL_GLContext
 
-const
-  SDL_INIT_TIMER*          = 0x00000001
-  SDL_INIT_AUDIO*          = 0x00000010
-  SDL_INIT_VIDEO*          = 0x00000020
-  SDL_INIT_JOYSTICK*       = 0x00000200
-  SDL_INIT_HAPTIC*         = 0x00001000
-  SDL_INIT_GAMECONTROLLER* = 0x00002000
-  SDL_INIT_EVENTS*         = 0x00004000
-  SDL_INIT_SENSOR*         = 0x00008000
-  SDL_INIT_NOPARACHUTE*    = 0x00100000
-  SDL_INIT_EVERYTHING*     = SDL_INIT_TIMER or SDL_INIT_AUDIO or SDL_INIT_VIDEO or SDL_INIT_JOYSTICK or SDL_INIT_HAPTIC or SDL_INIT_GAMECONTROLLER or SDL_INIT_EVENTS or SDL_INIT_SENSOR or SDL_INIT_NOPARACHUTE
+proc init*() =
+  SDL_SetMainReady()
+  discard SDL_Init(SDL_INIT_EVERYTHING)
 
-const
-  SDL_RENDERER_SOFTWARE*      = 0x00000001
-  SDL_RENDERER_ACCELERATED*   = 0x00000002
-  SDL_RENDERER_PRESENTVSYNC*  = 0x00000004
-  SDL_RENDERER_TARGETTEXTURE* = 0x00000008
+proc shutdown*() =
+  SDL_Quit()
 
-const
-  SDL_WINDOW_SHOWN*        = 0x00000004
+proc create_window*(name: string, w: int, h: int): sdl_window =
+  result.wnd = SDL_CreateWindow(name, 100, 100, w, h, SDL_WINDOW_SHOWN or SDL_WINDOW_OPENGL)
+  result.renderer = SDL_CreateRenderer(result.wnd, -1, SDL_RENDERER_ACCELERATED or SDL_RENDERER_PRESENTVSYNC)
 
-# Library initialization
-proc SDL_SetMainReady*() {.
-  cdecl, importc: "SDL_SetMainReady".}
+  SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 3)
+  SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 3)
+  SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_CORE)
+  SDL_GL_SetAttribute(SDL_GL_DEPTH_SIZE, 24)
+  SDL_GL_SetAttribute(SDL_GL_DOUBLEBUFFER, 1)
+  SDL_GL_SetAttribute(SDL_GL_MULTISAMPLEBUFFERS, 1)
+  SDL_GL_SetAttribute(SDL_GL_MULTISAMPLESAMPLES, 4)
 
-proc SDL_Init*(flags: uint32): int {.
-  cdecl, importc: "SDL_Init".}
-proc SDL_Quit*() {.
-  cdecl, importc: "SDL_Quit".}
+  result.glctx = SDL_GL_CreateContext(result.wnd)
+  discard SDL_SetRelativeMouseMode(SDL_TRUE)
 
-# Window management
-proc SDL_CreateWindow*(title: cstring; x: int; y: int; w: int; h: int, flags: uint32): ptr SDL_Window {.cdecl, importc: "SDL_CreateWindow".}
-proc SDL_DestroyWindow*(window: ptr SDL_Window) {.cdecl, importc: "SDL_DestroyWindow".}
-
-# Renderer management
-proc SDL_CreateRenderer*(window: ptr SDL_Window; index: int; flags: uint32): ptr SDL_Renderer {.cdecl, importc: "SDL_CreateRenderer".}
-proc SDL_DestroyRenderer*(renderer: ptr SDL_Renderer) {.cdecl, importc: "SDL_DestroyRenderer".}
-
-# OpenGL
-proc SDL_GL_SetAttribute*(attr: uint32; value: int) {.cdecl, importc: "SDL_GL_SetAttribute".}
+proc destroy_window*(window: sdl_window) =
+  if window.glctx != nil:
+    SDL_GL_DeleteContext(window.glctx)
+  if window.renderer != nil:
+    SDL_DestroyRenderer(window.renderer)
+  if window.wnd != nil:
+    SDL_DestroyWindow(window.wnd)
