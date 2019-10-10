@@ -1,7 +1,7 @@
 # === Copyright (c) 2019-2020 easimer.net. All rights reserved. ===
 
 import os
-import sdl2/wrapper
+import sdl2
 
 proc initialize_window() =
   SDL_SetMainReady()
