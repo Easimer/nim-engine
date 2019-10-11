@@ -5,6 +5,8 @@ import sdl2, sdl2/gfx
 import gl
 import winmgr
 import input
+import commands
+import vector
 
 var exit = false
 
@@ -54,12 +56,62 @@ proc useProgram(p: ShaderProgram) =
 proc debugCallback(source: GLenum, msgtype: GLenum, id: GLuint, severity: GLenum, length: GLsizei, message: cstring, userParam: pointer) {.cdecl.} =
     echo "OpenGL: " & $message
 
+type player = object
+    pos: vec2
+    vel: vec2
+    acc: vec2
+
+proc update(p: var player, dt: float) =
+    p.vel.x += p.acc.x * dt
+    p.pos.x += p.vel.x * dt
+    p.vel.y += p.acc.y * dt
+    p.pos.y += p.vel.y * dt
+
+    # Simulate friction
+    p.vel.x *= 1 - 0.2 * dt
+    p.vel.y *= 1 - 0.2 * dt
+
+    zeroCheck(p.acc)
+    zeroCheck(p.vel)
+
+var localplayer: player
+
+defineCommand("+forward"):
+    localplayer.acc.y = 8
+
+defineCommand("-forward"):
+    localplayer.acc.y = 0
+
+defineCommand("+lstrafe"):
+    localplayer.acc.x = -8
+
+defineCommand("-lstrafe"):
+    localplayer.acc.x = 0
+
+defineCommand("+rstrafe"):
+    localplayer.acc.x = 8
+
+defineCommand("-rstrafe"):
+    localplayer.acc.x = 0
+
+
+defineCommand("+back"):
+    localplayer.acc.y = -8
+
+defineCommand("-back"):
+    localplayer.acc.y = 0
+
 proc main() =
+    var inpsys: input_system
     setControlCHook(sighandler)
+
+    inpsys.bindKey(K_w, "+forward")
+    inpsys.bindKey(K_a, "+lstrafe")
+    inpsys.bindKey(K_s, "+back")
+    inpsys.bindKey(K_d, "+rstrafe")
 
     let wnd = openWindow(640, 480)
     defer: closeWindow(wnd)
-  
 
     gl.load_functions(glGetProcAddress)
     gl.enable(GL_DEBUG_OUTPUT)
@@ -91,7 +143,11 @@ proc main() =
     gl.enableVertexAttribArray(0)
 
     while not exit:
-        exit = processEvents(wnd)
+        exit = processEvents(wnd, inpsys)
+
+        update(localplayer, 0.16)
+        echo(localplayer)
+
         gl.clear(GL_COLOR_BUFFER_BIT)
 
         gl.bindVertexArray(arrays[0])

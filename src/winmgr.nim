@@ -1,6 +1,7 @@
 # === Copyright (c) 2019-2020 easimer.net. All rights reserved. ===
 
 import sdl2
+import input
 
 type window* = object
     window: WindowPtr
@@ -34,11 +35,15 @@ proc closeWindow*(wnd: window) =
 proc swapWindow*(wnd: window) =
     glSwapWindow(wnd.window)
 
-proc processEvents*(wnd: window): bool =
+proc processEvents*(wnd: window, inpsys: var input_system): bool =
+    result = false
     var ev = sdl2.defaultEvent
     if pollEvent(ev):
         case ev.kind:
             of QuitEvent:
                 result = true
-            else:
-                result = false
+            of KeyDown:
+                processKeyPress(inpsys, ev.evKeyboard.keysym.sym)
+            of KeyUp:
+                processKeyRelease(inpsys, ev.evKeyboard.keysym.sym)
+            else: discard nil
