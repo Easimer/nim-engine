@@ -1,5 +1,6 @@
 # === Copyright (c) 2019-2020 easimer.net. All rights reserved. ===
 
+import math
 import vector
 
 type matrix4* = array[16, float32]
@@ -33,3 +34,10 @@ proc translate*(v: vec4): matrix4 =
     result[14] = v[2]
 
 proc value_ptr*(mat: matrix4): array[16, float32] = cast[array[16, float32]](mat)
+
+proc rotateZ*(theta: float32): matrix4 =
+    result = identity()
+    result[0] = cos(theta)
+    result[1] = sin(theta)
+    result[4] = -sin(theta)
+    result[5] = cos(theta)
