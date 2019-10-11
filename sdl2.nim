@@ -42,3 +42,6 @@ proc destroy_window*(window: sdl_window) =
 proc swap_buffers*(window: sdl_window) =
   if window.wnd != nil:
     SDL_GL_SwapWindow(window.wnd)
+
+proc gl_loader*(name: string): pointer =
+  SDL_GL_GetProcAddress(name)

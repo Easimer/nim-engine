@@ -2,11 +2,23 @@
 
 import os
 import sdl2
+import gl
+
+var exit = false
+
+proc sighandler() {.noconv.} =
+  exit = true
+
+setControlCHook(sighandler)
 
 sdl2.init()
 defer: sdl2.shutdown()
 let window = sdl2.create_window("Nim Engine", 640, 480)
 defer: sdl2.destroy_window(window)
+defer: echo "Exiting"
 
-sdl2.swap_buffers(window)
-os.sleep(1000)
+gl.load_functions(sdl2.gl_loader)
+
+while not exit:
+  gl.clear(gl.GL_COLOR_BUFFER_BIT)
+  sdl2.swap_buffers(window)
