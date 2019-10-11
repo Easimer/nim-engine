@@ -28,6 +28,10 @@ type
   GLdouble* = float64
   GLclampd* = float64
   GLchar* = int8
+  GLintptr* = int64
+  GLsizeiptr* = int64
+  GLshaderID* = GLuint
+  GLprogramID* = GLuint
 
 #region loadGLAPI implementation
 
@@ -146,3 +150,14 @@ loadGLAPI:
   ("glClearColor", proc(red: GLfloat, green: GLfloat, blue: GLfloat, alpha: GLfloat) {.cdecl.})
   ("glViewport", proc(x: int, y: int, w: int, h: int) {.cdecl.})
   ("glGenBuffers", proc(n: GLsizei, buffers: ptr array[0..0, GLuint]) {.cdecl.})
+  ("glBindBuffer", proc(target: GLenum, buffer: GLuint) {.cdecl.})
+  ("glBufferData", proc(target: GLenum, offset: GLintptr, size: GLsizeiptr, data: pointer) {.cdecl.})
+  ("glCreateShader", proc(shader_type: GLenum): GLshaderID {.cdecl.})
+  ("glDeleteShader", proc(shader: GLshaderID) {.cdecl.})
+  ("glShaderSource", proc(shader: GLshaderID, count: GLsizei, source: cstring, length: ptr GLint) {.cdecl.})
+  ("glCompileShader", proc(shader: GLshaderID) {.cdecl.})
+  ("glCreateProgram", proc(): GLprogramID {.cdecl.})
+  ("glDeleteProgram", proc(program: GLprogramID) {.cdecl.})
+  ("glAttachShader", proc(program: GLprogramID, shader: GLshaderID) {.cdecl.})
+  ("glLinkProgram", proc(program: GLprogramID) {.cdecl.})
+  ("glUseProgram", proc(program: GLprogramID) {.cdecl.})
