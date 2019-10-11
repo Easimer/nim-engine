@@ -12,7 +12,7 @@ type
   GLfloat = float32
 
 type
-  PFNGETPROCADDR = (proc(name: string): pointer)
+  PFNGETPROCADDR = (proc(name: cstring): pointer {.cdecl.})
   PFNGLCLEARPROC = (proc(mask: GLbitfield) {.cdecl.})
   PFNGLCLEARCOLORPROC = (proc(red: GLfloat, green: GLfloat, blue: GLfloat, alpha: GLfloat) {.cdecl.})
 
