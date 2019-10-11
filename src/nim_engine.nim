@@ -7,6 +7,7 @@ import winmgr
 import input
 import commands
 import vector
+import matrix
 
 var exit = false
 
@@ -139,11 +140,16 @@ proc main() =
     gl.vertexAttribPointer(0, 3, GL_EFLOAT, GL_FALSE, cast[GLsizei](3 * sizeof(GLfloat)), nil)
     gl.enableVertexAttribArray(0)
 
+    echo(translate(localplayer.pos))
+
     while not exit:
         exit = processEvents(wnd, inpsys)
 
         update(localplayer, 0.16)
-        echo(localplayer)
+
+        let mvp = translate(localplayer.pos)
+        let mvp_location = prog.program.getUniformLocation("matMVP")
+        gl.uniformMatrix4fv(mvp_location, 1, GL_FALSE, value_ptr(mvp))
 
         gl.clear(GL_COLOR_BUFFER_BIT)
 

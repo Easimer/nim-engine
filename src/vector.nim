@@ -3,18 +3,18 @@
 import math
 
 type vec4* = object
-    x*: float
-    y*: float
-    z*: float
-    w*: float
+    x*: float32
+    y*: float32
+    z*: float32
+    w*: float32
 
-proc initVec*(x: float, y: float, z: float, w: float): vec4 =
+proc initVec*(x: float32, y: float32, z: float32, w: float32): vec4 =
     result.x = x
     result.y = y
     result.z = z
     result.w = w
 
-proc `[]`*(lhs: vec4, rhs: int): float =
+proc `[]`*(lhs: vec4, rhs: int): float32 =
     case rhs:
         of 0: result = lhs.x
         of 1: result = lhs.y
@@ -22,7 +22,7 @@ proc `[]`*(lhs: vec4, rhs: int): float =
         of 3: result = lhs.w
         else: result = 0
 
-proc `[]=`*(lhs: var vec4, idx: int, rhs: float) =
+proc `[]=`*(lhs: var vec4, idx: int, rhs: float32) =
     case idx:
         of 0:
             lhs.x = rhs
@@ -39,13 +39,13 @@ proc zeroCheck*(v: var vec4) =
         if abs(v[i]) < 0.01:
             v[i] = 0
 
-proc dot(lhs: vec4, rhs: vec4): float =
+proc dot(lhs: vec4, rhs: vec4): float32 =
     result = lhs.x * rhs.x + lhs.y * rhs.y + lhs.z * rhs.z + lhs.w * rhs.w
 
-proc len_sq*(v: vec4): float =
+proc len_sq*(v: vec4): float32 =
     result = dot(v, v)
 
-proc len*(v: vec4): float =
+proc len*(v: vec4): float32 =
     result = sqrt(len_sq(v))
 
 proc `+`*(lhs: vec4, rhs: vec4): vec4 =
@@ -56,14 +56,14 @@ proc `-`*(lhs: vec4, rhs: vec4): vec4 =
     for i in 0..3:
         result[i] = lhs[i] - rhs[i]
 
-proc `*`*(lhs: float, rhs: vec4): vec4 =
+proc `*`*(lhs: float32, rhs: vec4): vec4 =
     for i in 0..3:
         result[i] = lhs * rhs[i]
 
-proc `*`*(lhs: vec4, rhs: float): vec4 =
+proc `*`*(lhs: vec4, rhs: float32): vec4 =
     result = rhs * lhs
 
-proc `/`*(lhs: vec4, rhs: float): vec4 =
+proc `/`*(lhs: vec4, rhs: float32): vec4 =
     for i in 0..3:
         result[i] = lhs[i] / rhs
 
@@ -75,6 +75,6 @@ proc `-=`*(lhs: var vec4, rhs: vec4) =
     for i in 0..3:
         lhs[i] = lhs[i] - rhs[i]
 
-proc `*=`*(lhs: var vec4, rhs: float) =
+proc `*=`*(lhs: var vec4, rhs: float32) =
     for i in 0..3:
         lhs[i] = rhs * lhs[i]

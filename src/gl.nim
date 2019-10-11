@@ -2,6 +2,7 @@
 
 import macros
 import strutils
+import matrix
 
 type
   GLenum* = uint
@@ -28,6 +29,7 @@ type
   GLVAO* = distinct GLuint
   GLVBO* = distinct GLuint
   GLDEBUGPROC* = proc(source: GLenum, msgtype: GLenum, id: GLuint, severity: GLenum, length: GLsizei, message: cstring, userParam: pointer) {.cdecl.}
+  GLuniform* = distinct GLint
 
 const
   GL_DEPTH_BUFFER_BIT*        = 0x00000100
@@ -184,3 +186,5 @@ loadGLAPI:
   ("glDebugMessageCallback", proc(callback: GLDEBUGPROC, userParam: pointer) {.cdecl.})
   ("glGetProgramiv", "getProgram", proc(program: GLprogramID, pname: GLenum, params: array[0..0, GLint]) {.cdecl.})
   ("glGetShaderiv", "getShader", proc(shader: GLshaderID, pname: GLenum, params: array[0..0, GLint]) {.cdecl.})
+  ("glGetUniformLocation", proc(program: GLprogramID, name: cstring): GLuniform {.cdecl.})
+  ("glUniformMatrix4fv", proc(program: GLuniform, count: GLsizei, transpose: GLboolean, value: matrix4) {.cdecl.})
