@@ -3,15 +3,6 @@
 import macros
 import strutils
 
-const
-  GL_DEPTH_BUFFER_BIT*        = 0x00000100
-  GL_STENCIL_BUFFER_BIT*      = 0x00000400
-  GL_COLOR_BUFFER_BIT*        = 0x00004000
-  GL_FALSE*                   = 0
-  GL_TRUE*                    = 1
-  GL_VERTEX_SHADER*           = 0x8B31
-  GL_FRAGMENT_SHADER*         = 0x8B30
-
 type
   GLenum* = uint
   GLboolean* = uint8
@@ -36,6 +27,23 @@ type
   GLprogramID* = distinct GLuint
   GLVAO* = distinct GLuint
   GLVBO* = distinct GLuint
+  GLDEBUGPROC* = proc(source: GLenum, msgtype: GLenum, id: GLuint, severity: GLenum, length: GLsizei, message: cstring, userParam: pointer) {.cdecl.}
+
+const
+  GL_DEPTH_BUFFER_BIT*        = 0x00000100
+  GL_STENCIL_BUFFER_BIT*      = 0x00000400
+  GL_COLOR_BUFFER_BIT*        = 0x00004000
+  GL_FALSE*       : GLboolean = 0
+  GL_TRUE*        : GLboolean = 1
+  GL_VERTEX_SHADER*           = 0x8B31
+  GL_FRAGMENT_SHADER*         = 0x8B30
+  GL_ARRAY_BUFFER*   : GLenum = 0x8892
+  GL_STATIC_DRAW*    : GLenum = 0x88E4
+  GL_EFLOAT*         : GLenum = 0x1406
+  GL_TRIANGLES*      : GLenum = 0x0004
+  GL_DEBUG_OUTPUT*   : GLenum = 0x92E0
+  GL_LINK_STATUS*    : GLenum = 0x8B82
+  GL_COMPILE_STATUS* : GLenum = 0x8B81
 
 #region loadGLAPI implementation
 
@@ -155,10 +163,10 @@ loadGLAPI:
   ("glViewport", proc(x: int, y: int, w: int, h: int) {.cdecl.})
   ("glGenBuffers", proc(n: GLsizei, buffers: ptr array[0..0, GLVBO]) {.cdecl.})
   ("glBindBuffer", proc(target: GLenum, buffer: GLVBO) {.cdecl.})
-  ("glBufferData", proc(target: GLenum, offset: GLintptr, size: GLsizeiptr, data: pointer) {.cdecl.})
+  ("glBufferData", proc(target: GLenum, size: GLsizeiptr, data: pointer, usage: GLenum) {.cdecl.})
   ("glCreateShader", proc(shader_type: GLenum): GLshaderID {.cdecl.})
   ("glDeleteShader", proc(shader: GLshaderID) {.cdecl.})
-  ("glShaderSource", proc(shader: GLshaderID, count: GLsizei, source: cstring, length: ptr GLint) {.cdecl.})
+  ("glShaderSource", proc(shader: GLshaderID, count: GLsizei, source: ptr cstring, length: ptr GLint) {.cdecl.})
   ("glCompileShader", proc(shader: GLshaderID) {.cdecl.})
   ("glCreateProgram", proc(): GLprogramID {.cdecl.})
   ("glDeleteProgram", proc(program: GLprogramID) {.cdecl.})
@@ -170,3 +178,9 @@ loadGLAPI:
   ("glGenVertexArrays", proc(n: GLsizei, buffer: ptr array[0..0, GLVAO]) {.cdecl.})
   ("glBindVertexArray", proc(vao: GLVAO) {.cdecl.})
   ("glDrawArrays", proc(mode: GLenum, first: GLint, count: GLsizei) {.cdecl.})
+  ("glGetError", proc(): GLenum {.cdecl.})
+  ("glEnable", proc(cap: GLenum) {.cdecl.})
+  ("glDisable", proc(cap: GLenum) {.cdecl.})
+  ("glDebugMessageCallback", proc(callback: GLDEBUGPROC, userParam: pointer) {.cdecl.})
+  ("glGetProgramiv", "getProgram", proc(program: GLprogramID, pname: GLenum, params: array[0..0, GLint]) {.cdecl.})
+  ("glGetShaderiv", "getShader", proc(shader: GLshaderID, pname: GLenum, params: array[0..0, GLint]) {.cdecl.})
