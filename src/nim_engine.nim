@@ -57,19 +57,16 @@ proc debugCallback(source: GLenum, msgtype: GLenum, id: GLuint, severity: GLenum
     echo "OpenGL: " & $message
 
 type player = object
-    pos: vec2
-    vel: vec2
-    acc: vec2
+    pos: vec4
+    vel: vec4
+    acc: vec4
 
 proc update(p: var player, dt: float) =
-    p.vel.x += p.acc.x * dt
-    p.pos.x += p.vel.x * dt
-    p.vel.y += p.acc.y * dt
-    p.pos.y += p.vel.y * dt
+    p.vel += dt * p.acc
+    p.pos += dt * p.vel
 
     # Simulate friction
-    p.vel.x *= 1 - 0.2 * dt
-    p.vel.y *= 1 - 0.2 * dt
+    p.vel *= 1 - 0.2 * dt
 
     zeroCheck(p.acc)
     zeroCheck(p.vel)
