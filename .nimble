@@ -1,1 +1,0 @@
-requires "sdl2"
