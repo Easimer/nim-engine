@@ -4,6 +4,7 @@ import os
 import sdl2, sdl2/gfx
 import gl
 import winmgr
+import input
 
 var exit = false
 
