@@ -18,6 +18,7 @@ proc main() =
   defer: echo "Exiting"
 
   gl.load_functions(sdl2.gl_loader)
+  gl.clearColor(0.392, 0.584, 0.929, 1.0)
 
   while not exit:
     gl.clear(gl.GL_COLOR_BUFFER_BIT)

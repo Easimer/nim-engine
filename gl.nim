@@ -8,13 +8,17 @@ const
   GL_TRUE*                    = 1
 
 type
-  GLbitfield = uint
+  GLbitfield = uint32
+  GLfloat = float32
 
 type
   PFNGETPROCADDR = (proc(name: string): pointer)
   PFNGLCLEARPROC = (proc(mask: GLbitfield) {.cdecl.})
+  PFNGLCLEARCOLORPROC = (proc(red: GLfloat, green: GLfloat, blue: GLfloat, alpha: GLfloat) {.cdecl.})
 
 var clear*: PFNGLCLEARPROC
+var clearColor*: PFNGLCLEARCOLORPROC
 
 proc load_functions*(loader: PFNGETPROCADDR) =
   clear = cast[PFNGLCLEARPROC](loader("glClear"))
+  clearColor = cast[PFNGLCLEARCOLORPROC](loader("glClearColor"))
