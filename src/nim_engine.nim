@@ -21,6 +21,17 @@ proc main() =
     gl.clearColor(0.392, 0.584, 0.929, 1.0)
     gl.viewport(0, 0, 640, 480)
 
+    # Hello Triangle
+    let vertices: array[9, GLfloat] = [
+        -0.5f, -0.5f, 0.0f,
+        0.5f, -0.5f, 0.0f,
+        0.0f,  0.5f, 0.0f
+    ]
+
+    var buffers: array[1, GLuint]
+
+    gl.genBuffers(1, addr buffers)
+
     while not exit:
         exit = processEvents(wnd)
         gl.clear(GL_COLOR_BUFFER_BIT)

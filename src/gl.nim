@@ -11,8 +11,23 @@ const
   GL_TRUE*                    = 1
 
 type
-  GLbitfield = uint32
-  GLfloat = float32
+  GLenum* = uint
+  GLboolean* = uint8
+  GLbitfield* = uint32
+  GLvoid* = void
+  GLbyte* = int8
+  GLshort* = int16
+  GLint* = int32
+  GLclampx* = int
+  GLubyte* = uint8
+  GLushort* = uint16
+  GLuint* = uint32
+  GLsizei* = int
+  GLfloat* = float32
+  GLclampf* = float32
+  GLdouble* = float64
+  GLclampd* = float64
+  GLchar* = int8
 
 #region loadGLAPI implementation
 
@@ -127,9 +142,7 @@ macro loadGLAPI(api_entries: untyped): untyped =
 
 # (C symbol name[, Nim procedure name], Procedure type)
 loadGLAPI:
-  ("glClear",
-    proc(mask: GLbitfield) {.cdecl.})
-  ("glClearColor",
-    proc(red: GLfloat, green: GLfloat, blue: GLfloat, alpha: GLfloat) {.cdecl.})
-  ("glViewport",
-    proc(x: int, y: int, w: int, h: int) {.cdecl.})
+  ("glClear", proc(mask: GLbitfield) {.cdecl.})
+  ("glClearColor", proc(red: GLfloat, green: GLfloat, blue: GLfloat, alpha: GLfloat) {.cdecl.})
+  ("glViewport", proc(x: int, y: int, w: int, h: int) {.cdecl.})
+  ("glGenBuffers", proc(n: GLsizei, buffers: ptr array[0..0, GLuint]) {.cdecl.})
