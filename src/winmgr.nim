@@ -27,9 +27,18 @@ proc closeWindow*(wnd: window) =
     if wnd.glctx != nil:
         glDeleteContext(wnd.glctx)
     if wnd.renderer != nil:
-        destroyRenderer(wnd.renderer)
+        destroy wnd.renderer
     if wnd.window != nil:
-        destroyWindow(wnd.window)
+        destroy wnd.window
 
 proc swapWindow*(wnd: window) =
     glSwapWindow(wnd.window)
+
+proc processEvents*(wnd: window): bool =
+    var ev = sdl2.defaultEvent
+    if pollEvent(ev):
+        case ev.kind:
+            of QuitEvent:
+                result = true
+            else:
+                result = false

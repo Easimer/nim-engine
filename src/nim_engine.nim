@@ -19,8 +19,10 @@ proc main() =
 
     gl.load_functions(glGetProcAddress)
     gl.clearColor(0.392, 0.584, 0.929, 1.0)
+    gl.viewport(0, 0, 640, 480)
 
     while not exit:
+        exit = processEvents(wnd)
         gl.clear(gl.GL_COLOR_BUFFER_BIT)
         swapWindow(wnd)
 

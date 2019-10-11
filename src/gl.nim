@@ -15,10 +15,13 @@ type
   PFNGETPROCADDR = (proc(name: cstring): pointer {.cdecl.})
   PFNGLCLEARPROC = (proc(mask: GLbitfield) {.cdecl.})
   PFNGLCLEARCOLORPROC = (proc(red: GLfloat, green: GLfloat, blue: GLfloat, alpha: GLfloat) {.cdecl.})
+  PFNGLVIEWPORTPROC = (proc(x: int, y: int, w: int, h: int) {.cdecl.})
 
 var clear*: PFNGLCLEARPROC
 var clearColor*: PFNGLCLEARCOLORPROC
+var viewport*: PFNGLVIEWPORTPROC
 
 proc load_functions*(loader: PFNGETPROCADDR) =
   clear = cast[PFNGLCLEARPROC](loader("glClear"))
   clearColor = cast[PFNGLCLEARCOLORPROC](loader("glClearColor"))
+  viewport = cast[PFNGLVIEWPORTPROC](loader("glViewport"))
