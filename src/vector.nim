@@ -8,6 +8,12 @@ type vec4* = object
     z*: float
     w*: float
 
+proc initVec*(x: float, y: float, z: float, w: float): vec4 =
+    result.x = x
+    result.y = y
+    result.z = z
+    result.w = w
+
 proc `[]`*(lhs: vec4, rhs: int): float =
     case rhs:
         of 0: result = lhs.x
