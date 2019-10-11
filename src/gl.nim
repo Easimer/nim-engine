@@ -30,8 +30,10 @@ type
   GLchar* = int8
   GLintptr* = int64
   GLsizeiptr* = int64
-  GLshaderID* = GLuint
-  GLprogramID* = GLuint
+  GLshaderID* = distinct GLuint
+  GLprogramID* = distinct GLuint
+  GLVAO* = distinct GLuint
+  GLVBO* = distinct GLuint
 
 #region loadGLAPI implementation
 
@@ -149,8 +151,8 @@ loadGLAPI:
   ("glClear", proc(mask: GLbitfield) {.cdecl.})
   ("glClearColor", proc(red: GLfloat, green: GLfloat, blue: GLfloat, alpha: GLfloat) {.cdecl.})
   ("glViewport", proc(x: int, y: int, w: int, h: int) {.cdecl.})
-  ("glGenBuffers", proc(n: GLsizei, buffers: ptr array[0..0, GLuint]) {.cdecl.})
-  ("glBindBuffer", proc(target: GLenum, buffer: GLuint) {.cdecl.})
+  ("glGenBuffers", proc(n: GLsizei, buffers: ptr array[0..0, GLVBO]) {.cdecl.})
+  ("glBindBuffer", proc(target: GLenum, buffer: GLVBO) {.cdecl.})
   ("glBufferData", proc(target: GLenum, offset: GLintptr, size: GLsizeiptr, data: pointer) {.cdecl.})
   ("glCreateShader", proc(shader_type: GLenum): GLshaderID {.cdecl.})
   ("glDeleteShader", proc(shader: GLshaderID) {.cdecl.})
@@ -161,3 +163,8 @@ loadGLAPI:
   ("glAttachShader", proc(program: GLprogramID, shader: GLshaderID) {.cdecl.})
   ("glLinkProgram", proc(program: GLprogramID) {.cdecl.})
   ("glUseProgram", proc(program: GLprogramID) {.cdecl.})
+  ("glVertexAttribPointer", proc(index: GLuint, size: GLint, attrtype: GLenum, normalized: GLboolean, stride: GLsizei, bpointer: pointer) {.cdecl.})
+  ("glEnableVertexAttribArray", proc(index: GLuint) {.cdecl.})
+  ("glGenVertexArrays", proc(n: GLsizei, buffer: ptr array[0..0, GLVAO]) {.cdecl.})
+  ("glBindVertexArray", proc(vao: GLVAO) {.cdecl.})
+  ("glDrawArrays", proc(mode: GLenum, first: GLint, count: GLsizei) {.cdecl.})

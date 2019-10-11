@@ -28,8 +28,8 @@ proc main() =
         0.0f,  0.5f, 0.0f
     ]
 
-    var buffers: array[1, GLuint]
-
+    var buffers: array[1, GLVBO]
+    
     gl.genBuffers(1, addr buffers)
 
     while not exit:
