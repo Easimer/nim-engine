@@ -9,16 +9,18 @@ var exit = false
 proc sighandler() {.noconv.} =
   exit = true
 
-setControlCHook(sighandler)
+proc main() =
+  setControlCHook(sighandler)
+  sdl2.init()
+  defer: sdl2.shutdown()
+  let window = sdl2.create_window("Nim Engine", 640, 480)
+  defer: sdl2.destroy_window(window)
+  defer: echo "Exiting"
 
-sdl2.init()
-defer: sdl2.shutdown()
-let window = sdl2.create_window("Nim Engine", 640, 480)
-defer: sdl2.destroy_window(window)
-defer: echo "Exiting"
+  gl.load_functions(sdl2.gl_loader)
 
-gl.load_functions(sdl2.gl_loader)
+  while not exit:
+    gl.clear(gl.GL_COLOR_BUFFER_BIT)
+    sdl2.swap_buffers(window)
 
-while not exit:
-  gl.clear(gl.GL_COLOR_BUFFER_BIT)
-  sdl2.swap_buffers(window)
+main()
