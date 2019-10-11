@@ -54,29 +54,29 @@ const
 const
   SDL_GL_CONTEXT_PROFILE_CORE* = 0x0001
 
-const
-  SDL_FIRSTEVENT*               = 0x0000
-  SDL_EV_QUIT*                  = 0x0100
-  SDL_APP_TERMINATING*          = 0x0101
-  SDL_APP_LOWMEMORY*            = 0x0102
-  SDL_APP_WILLENTERBACKGROUND*  = 0x0103
-  SDL_APP_DIDENTERBACKGROUND*   = 0x0104
-  SDL_APP_WILLENTERFOREGROUND*  = 0x0105
-  SDL_APP_DIDENTERFOREGROUND*   = 0x0106
-  SDL_DISPLAYEVENT*             = 0x0150
-  SDL_WINDOWEVENT*              = 0x0200
-  SDL_SYSWMEVENT*               = 0x0201
-  SDL_KEYDOWN*                  = 0x0300
-  SDL_KEYUP*                    = 0x0301
-  SDL_TEXTEDITING*              = 0x0302
-  SDL_TEXTINPUT*                = 0x0303
-  SDL_KEYMAPCHANGED*            = 0x0304
-  SDL_MOUSEMOTION*              = 0x0400
-  SDL_MOUSEBUTTONDOWN*          = 0x0401
-  SDL_MOUSEBUTTONUP*            = 0x0402
-  SDL_MOUSEWHEEL*               = 0x0403
-  SDL_USEREVENT*                = 0x8000
-  SDL_LASTEVENT*                = 0xFFFF
+type SDL_EventType = enum
+  SDL_FIRSTEVENT               = 0x0000
+  SDL_EV_QUIT                  = 0x0100
+  SDL_APP_TERMINATING          = 0x0101
+  SDL_APP_LOWMEMORY            = 0x0102
+  SDL_APP_WILLENTERBACKGROUND  = 0x0103
+  SDL_APP_DIDENTERBACKGROUND   = 0x0104
+  SDL_APP_WILLENTERFOREGROUND  = 0x0105
+  SDL_APP_DIDENTERFOREGROUND   = 0x0106
+  SDL_DISPLAYEVENT             = 0x0150
+  SDL_WINDOWEVENT              = 0x0200
+  SDL_SYSWMEVENT               = 0x0201
+  SDL_KEYDOWN                  = 0x0300
+  SDL_KEYUP                    = 0x0301
+  SDL_TEXTEDITING              = 0x0302
+  SDL_TEXTINPUT                = 0x0303
+  SDL_KEYMAPCHANGED            = 0x0304
+  SDL_MOUSEMOTION              = 0x0400
+  SDL_MOUSEBUTTONDOWN          = 0x0401
+  SDL_MOUSEBUTTONUP            = 0x0402
+  SDL_MOUSEWHEEL               = 0x0403
+  SDL_USEREVENT                = 0x8000
+  SDL_LASTEVENT                = 0xFFFF
 
 const
   SDL_SCANCODE_F1*    = 58
@@ -178,11 +178,9 @@ type SDL_Keysym = object
   unused: uint32
 
 type SDL_CommonEvent = object
-  ev_type: uint32
   timestamp: uint32
 
 type SDL_KeyboardEvent = object
-  ev_type: uint32
   timestamp: uint32
   windowID: uint32
   state: uint8
@@ -192,7 +190,6 @@ type SDL_KeyboardEvent = object
   keysym: SDL_Keysym
 
 type SDL_MouseMotionEvent = object
-  ev_type: uint32
   timestamp: uint32
   windowID: uint32
   which: uint32
@@ -203,7 +200,6 @@ type SDL_MouseMotionEvent = object
   yrel: int32
 
 type SDL_MouseButtonEvent = object
-  ev_type: uint32
   timestamp: uint32
   windowID: uint32
   which: uint32
@@ -215,7 +211,6 @@ type SDL_MouseButtonEvent = object
   y: int32
 
 type SDL_MouseWheelEvent = object
-  ev_type: uint32
   timestamp: uint32
   windowID: uint32
   which: uint32
@@ -223,6 +218,19 @@ type SDL_MouseWheelEvent = object
   y: int32
   direction: uint32
 
+type SDL_Event* = ref object
+  case kind: SDL_EventType
+  of SDL_FIRSTEVENT, SDL_LASTEVENT: nil
+  of SDL_KEYDOWN, SDL_KEYUP: key: SDL_KeyboardEvent
+  of SDL_KEYMAPCHANGED: nil
+  of SDL_EV_QUIT: nil
+  of SDL_APP_TERMINATING, SDL_APP_LOWMEMORY, SDL_APP_WILLENTERBACKGROUND, SDL_APP_DIDENTERBACKGROUND, SDL_APP_WILLENTERFOREGROUND, SDL_APP_DIDENTERFOREGROUND: nil
+  of SDL_DISPLAYEVENT, SDL_WINDOW_EVENT, SDL_SYSWMEVENT: nil
+  of SDL_TEXTEDITING, SDL_TEXTINPUT: nil
+  of SDL_MOUSEMOTION: motion: SDL_MouseMotionEvent
+  of SDL_MOUSEBUTTONDOWN, SDL_MOUSEBUTTONUP: button: SDL_MouseButtonEvent
+  of SDL_MOUSEWHEEL: wheel: SDL_MouseWheelEvent
+  of SDL_USEREVENT: nil
 
 
 # Library initialization
