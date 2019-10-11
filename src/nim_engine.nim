@@ -23,7 +23,7 @@ proc main() =
 
     while not exit:
         exit = processEvents(wnd)
-        gl.clear(gl.GL_COLOR_BUFFER_BIT)
+        gl.clear(GL_COLOR_BUFFER_BIT)
         swapWindow(wnd)
 
 main()

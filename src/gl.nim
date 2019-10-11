@@ -1,6 +1,7 @@
 # === Copyright (c) 2019-2020 easimer.net. All rights reserved. ===
 
 import macros
+import strutils
 
 const
   GL_DEPTH_BUFFER_BIT*        = 0x00000100
@@ -12,6 +13,8 @@ const
 type
   GLbitfield = uint32
   GLfloat = float32
+
+#region loadGLAPI implementation
 
 type
   PFNGETPROCADDR = (proc(name: cstring): pointer {.cdecl.})
@@ -56,6 +59,7 @@ proc addLoadStatement(loading_statements: NimNode, procname: string, proctypenam
   )
 
 macro loadGLAPI(api_entries: untyped): untyped =
+  api_entries.expectMinLen(2)
   result = newStmtList()
 
   # Contains the function pointer typedefs
@@ -87,9 +91,29 @@ macro loadGLAPI(api_entries: untyped): untyped =
 
   for api in api_entries:
     let sym = $api[0]
-    let procname = $api[1]
-    let proctype = api[2]
+    
+    
+    var procname: string 
+    if api.len() <= 2:
+      # Generate nim procedure name from C symbol
+      if not sym.startsWith("gl"):
+        funcptr_list.add(
+          nnkPragma.newTree(
+            nnkCall.newTree(
+              newIdentNode("warning"),
+              newLit("Symbol name '$1' doesn't start with 'gl'! Are you sure this is an OpenGL function?" % (sym))
+            )
+          )
+        )
+
+      procname = sym[2..^1]
+      procname[0] = procname[0].toLowerAscii()
+    elif api.len() > 2:
+      # Nim procedure name was explicitly provided
+      procname = $api[1]
+
     let proctypename = procname & "_t"
+    let proctype = api.last()
 
     proctype_section.addProcTypedef(proctypename, proctype)
     funcptr_list.addFuncptr(procname, proctypename)
@@ -99,11 +123,13 @@ macro loadGLAPI(api_entries: untyped): untyped =
   result.add funcptr_list
   result.add load_functions_proc
 
-# (C symbol name, Nim procedure name, Procedure type)
+#endregion
+
+# (C symbol name[, Nim procedure name], Procedure type)
 loadGLAPI:
-  ("glClear", "clear",
+  ("glClear",
     proc(mask: GLbitfield) {.cdecl.})
-  ("glClearColor", "clearColor",
+  ("glClearColor",
     proc(red: GLfloat, green: GLfloat, blue: GLfloat, alpha: GLfloat) {.cdecl.})
-  ("glViewport", "viewport",
+  ("glViewport",
     proc(x: int, y: int, w: int, h: int) {.cdecl.})
