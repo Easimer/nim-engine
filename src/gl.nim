@@ -9,6 +9,8 @@ const
   GL_COLOR_BUFFER_BIT*        = 0x00004000
   GL_FALSE*                   = 0
   GL_TRUE*                    = 1
+  GL_VERTEX_SHADER*           = 0x8B31
+  GL_FRAGMENT_SHADER*         = 0x8B30
 
 type
   GLenum* = uint
@@ -17,7 +19,7 @@ type
   GLvoid* = void
   GLbyte* = int8
   GLshort* = int16
-  GLint* = int32
+  GLint* = int
   GLclampx* = int
   GLubyte* = uint8
   GLushort* = uint16
