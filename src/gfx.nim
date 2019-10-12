@@ -4,6 +4,7 @@ import draw_info
 import gl
 import sdl2
 import winmgr
+import vector
 import matrix
 import input
 import stb_image/read as stbi
@@ -18,6 +19,7 @@ type gfx* = object
     quad: GLVAO
     shaderSprite: ShaderProgram
     sprites: seq[GLtexture]
+    mat_view: matrix4
 
 proc debugCallback(source: GLenum, msgtype: GLenum, id: GLuint, severity: GLenum, length: GLsizei, message: cstring, userParam: pointer) {.cdecl.} =
     echo "OpenGL: " & $message
@@ -121,13 +123,16 @@ proc flip*(g: var gfx) =
 proc update*(g: var gfx, inpsys: var input_system): bool =
     processEvents(g.wnd, inpsys)
 
+proc move_camera*(g: var gfx, pos: vec4) =
+    g.mat_view = translate(-pos)
+
 proc draw*(g: var gfx, diseq: seq[draw_info]) =
     gl.bindVertexArray(g.quad)
     g.shaderSprite.useProgram()
     let mvp_location = g.shaderSprite.program.getUniformLocation("matMVP")
     for di in diseq:
-        let mvp = translate(di.position)
-        gl.uniformMatrix4fv(mvp_location, 1, GL_FALSE, value_ptr(mvp))
+        let mat_world = translate(di.position)
+        gl.uniformMatrix4fv(mvp_location, 1, GL_FALSE, value_ptr(g.mat_view * mat_world))
         gl.bindTexture(GL_TEXTURE_2D, g.sprites[cast[uint32](di.sprite)])
         gl.drawArrays(GL_TRIANGLES, 0, 6)
 

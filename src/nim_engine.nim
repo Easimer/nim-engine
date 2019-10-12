@@ -26,7 +26,7 @@ proc main() =
     g.init()
 
     var frame_start = sdl2.getPerformanceCounter()
-    var frame_end: uint64 = frame_start
+    var frame_end = frame_start
 
     if game.game_load("none", g):
         while not exit:
@@ -34,6 +34,7 @@ proc main() =
             frame_start = sdl2.getPerformanceCounter()
             exit = g.update(inpsys)
             g.clear()
+            g.move_camera(game.game_get_camera())
             g.draw(game.game_update(dt, g))
             g.flip()
             frame_end = sdl2.getPerformanceCounter()

@@ -62,3 +62,4 @@ proc game_update*(dt: float, g: var gfx): seq[draw_info] =
 
     result.add(di)
 
+proc game_get_camera*(): vec4 = localplayer.pos

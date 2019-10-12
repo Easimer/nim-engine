@@ -78,3 +78,7 @@ proc `-=`*(lhs: var vec4, rhs: vec4) =
 proc `*=`*(lhs: var vec4, rhs: float32) =
     for i in 0..3:
         lhs[i] = rhs * lhs[i]
+
+proc `-`*(v: vec4): vec4 =
+    for i in 0..3:
+        result[i] = -v[i]
