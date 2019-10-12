@@ -6,6 +6,7 @@ import sdl2
 import winmgr
 import matrix
 import input
+import stb_image/read as stbi
 
 type ShaderProgram = object
     shader_vertex: GLshaderID
@@ -62,22 +63,36 @@ proc createQuad(): GLVAO =
         0.5f, -0.5f, 0.0f,
         -0.5f,  0.5f, 0.0f,
         -0.5f,  0.5f, 0.0f,
-        0.5f,  -0.5f, 0.0f,
         0.5f,  0.5f, 0.0f,
+        0.5f,  -0.5f, 0.0f,
     ]
 
-    var buffers: array[1, GLVBO]
+    var uv: array[12, GLfloat] = [
+        0.0f, 0.0f,
+        1.0f, 0.0f,
+        0.0f, 1.0f,
+        0.0f, 1.0f,
+        1.0f, 1.0f,
+        1.0f, 0.0f,
+    ]
+
+    var buffers: array[2, GLVBO]
     var arrays: array[1, GLVAO]
 
     gl.genVertexArrays(1, addr arrays)
     gl.bindVertexArray(arrays[0])
 
-    gl.genBuffers(1, addr buffers)
+    gl.genBuffers(2, addr buffers)
+
     gl.bindBuffer(GL_ARRAY_BUFFER, buffers[0])
     gl.bufferData(GL_ARRAY_BUFFER, cast[GLintptr](sizeof(vertices)), addr(vertices), GL_STATIC_DRAW)
-
     gl.vertexAttribPointer(0, 3, GL_EFLOAT, GL_FALSE, cast[GLsizei](3 * sizeof(GLfloat)), nil)
     gl.enableVertexAttribArray(0)
+
+    gl.bindBuffer(GL_ARRAY_BUFFER, buffers[1])
+    gl.bufferData(GL_ARRAY_BUFFER, cast[GLintptr](sizeof(uv)), addr(uv), GL_STATIC_DRAW)
+    gl.vertexAttribPointer(1, 2, GL_EFLOAT, GL_FALSE, cast[GLsizei](2 * sizeof(GLfloat)), nil)
+    gl.enableVertexAttribArray(1)
     
     arrays[0]
     
@@ -113,4 +128,26 @@ proc draw*(g: var gfx, diseq: seq[draw_info]) =
     for di in diseq:
         let mvp = translate(di.position)
         gl.uniformMatrix4fv(mvp_location, 1, GL_FALSE, value_ptr(mvp))
+        gl.bindTexture(GL_TEXTURE_2D, g.sprites[cast[uint32](di.sprite)])
         gl.drawArrays(GL_TRIANGLES, 0, 6)
+
+proc load_sprite*(g: var gfx, path: string): sprite_id =
+    var
+        width, height, channels: int
+        data: seq[uint8]
+        tex: GLtexture
+    
+    data = stbi.load(path, width, height, channels, stbi.Default)
+    
+    gl.genTextures(1, addr tex)
+    gl.bindTexture(GL_TEXTURE_2D, tex)
+    gl.texParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT)
+    gl.texParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT)
+    gl.texParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR)
+    gl.texParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST)
+
+    gl.texImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, addr data[0])
+    gl.generateMipmap(GL_TEXTURE_2D)
+
+    result = cast[sprite_id](len(g.sprites))
+    g.sprites.add(tex)

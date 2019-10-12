@@ -42,11 +42,25 @@ const
   GL_FRAGMENT_SHADER*         = 0x8B30
   GL_ARRAY_BUFFER*   : GLenum = 0x8892
   GL_STATIC_DRAW*    : GLenum = 0x88E4
+  GL_UNSIGNED_BYTE*  : GLenum = 0x1401
   GL_EFLOAT*         : GLenum = 0x1406
   GL_TRIANGLES*      : GLenum = 0x0004
   GL_DEBUG_OUTPUT*   : GLenum = 0x92E0
   GL_LINK_STATUS*    : GLenum = 0x8B82
   GL_COMPILE_STATUS* : GLenum = 0x8B81
+  GL_TEXTURE_2D*     : GLenum = 0x0DE1
+  GL_TEXTURE_WRAP_S* : GLenum = 0x2802
+  GL_TEXTURE_WRAP_T* : GLenum = 0x2803
+  GL_REPEAT*         : GLenum = 0x2901
+  GL_MIRRORED_REPEAT* : GLenum = 0x8370
+  GL_TEXTURE_BORDER_COLOR* : GLenum = 0x1004
+  GL_NEAREST*        : GLenum = 0x2600
+  GL_LINEAR*         : GLenum = 0x2601
+  GL_TEXTURE_MAG_FILTER* : GLenum = 0x2800
+  GL_TEXTURE_MIN_FILTER* : GLenum = 0x2801
+  GL_LINEAR_MIPMAP_LINEAR* : GLenum = 0x2703
+  GL_RGB*            : GLenum =  0x1907
+  GL_RGBA*           : GLenum =  0x1908
 
 #region loadGLAPI implementation
 
@@ -164,7 +178,7 @@ loadGLAPI:
   ("glClear", proc(mask: GLbitfield) {.cdecl.})
   ("glClearColor", proc(red: GLfloat, green: GLfloat, blue: GLfloat, alpha: GLfloat) {.cdecl.})
   ("glViewport", proc(x: int, y: int, w: int, h: int) {.cdecl.})
-  ("glGenBuffers", proc(n: GLsizei, buffers: ptr array[0..0, GLVBO]) {.cdecl.})
+  ("glGenBuffers", proc(n: GLsizei, buffers: pointer) {.cdecl.})
   ("glBindBuffer", proc(target: GLenum, buffer: GLVBO) {.cdecl.})
   ("glBufferData", proc(target: GLenum, size: GLsizeiptr, data: pointer, usage: GLenum) {.cdecl.})
   ("glCreateShader", proc(shader_type: GLenum): GLshaderID {.cdecl.})
@@ -178,7 +192,7 @@ loadGLAPI:
   ("glUseProgram", proc(program: GLprogramID) {.cdecl.})
   ("glVertexAttribPointer", proc(index: GLuint, size: GLint, attrtype: GLenum, normalized: GLboolean, stride: GLsizei, bpointer: pointer) {.cdecl.})
   ("glEnableVertexAttribArray", proc(index: GLuint) {.cdecl.})
-  ("glGenVertexArrays", proc(n: GLsizei, buffer: ptr array[0..0, GLVAO]) {.cdecl.})
+  ("glGenVertexArrays", proc(n: GLsizei, buffer: pointer) {.cdecl.})
   ("glBindVertexArray", proc(vao: GLVAO) {.cdecl.})
   ("glDrawArrays", proc(mode: GLenum, first: GLint, count: GLsizei) {.cdecl.})
   ("glGetError", proc(): GLenum {.cdecl.})
@@ -189,3 +203,10 @@ loadGLAPI:
   ("glGetShaderiv", "getShader", proc(shader: GLshaderID, pname: GLenum, params: array[0..0, GLint]) {.cdecl.})
   ("glGetUniformLocation", proc(program: GLprogramID, name: cstring): GLuniform {.cdecl.})
   ("glUniformMatrix4fv", proc(program: GLuniform, count: GLsizei, transpose: GLboolean, value: matrix4) {.cdecl.})
+  ("glTexParameteri", proc(target: GLenum, wrap: GLenum, border: GLenum) {.cdecl.})
+  ("glTexParameterfv", proc(target: GLenum, pname: GLenum, vec: pointer) {.cdecl.})
+  ("glGenTextures", proc(n: GLsizei, buffer: pointer) {.cdecl.})
+  ("glBindTexture", proc(target: GLenum, texture: Gltexture) {.cdecl.})
+  ("glTexImage2D", proc(target: GLenum, level: GLint, internalFormat: GLenum, width: GLsizei, height: GLsizei,
+    border: GLint, format: GLenum, textype: GLenum, data: ptr uint8) {.cdecl.})
+  ("glGenerateMipmap", proc(target: GLenum) {.cdecl.})
