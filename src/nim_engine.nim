@@ -25,12 +25,18 @@ proc main() =
     var g: gfx
     g.init()
 
+    var frame_start = sdl2.getPerformanceCounter()
+    var frame_end: uint64 = frame_start
+
     if game.game_load("none", g):
         while not exit:
+            let dt: float = cast[float](frame_end - frame_start) / cast[float](sdl2.getPerformanceFrequency())
+            frame_start = sdl2.getPerformanceCounter()
             exit = g.update(inpsys)
             g.clear()
-            g.draw(game.game_update(0.016, g))
+            g.draw(game.game_update(dt, g))
             g.flip()
+            frame_end = sdl2.getPerformanceCounter()
     else:
         echo("game_load has failed, exiting.")
 
