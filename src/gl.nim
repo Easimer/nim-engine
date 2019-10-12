@@ -30,6 +30,7 @@ type
   GLVBO* = distinct GLuint
   GLDEBUGPROC* = proc(source: GLenum, msgtype: GLenum, id: GLuint, severity: GLenum, length: GLsizei, message: cstring, userParam: pointer) {.cdecl.}
   GLuniform* = distinct GLint
+  GLtexture* = distinct GLint
 
 const
   GL_DEPTH_BUFFER_BIT*        = 0x00000100
