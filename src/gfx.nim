@@ -83,12 +83,12 @@ proc createQuad(): GLVAO =
     ]
 
     var uv: array[12, GLfloat] = [
-        0.0f, 0.0f,
-        1.0f, 0.0f,
-        0.0f, 1.0f,
         0.0f, 1.0f,
         1.0f, 1.0f,
+        0.0f, 0.0f,
+        0.0f, 0.0f,
         1.0f, 0.0f,
+        1.0f, 1.0f,
     ]
 
     var buffers: array[2, GLVBO]
