@@ -50,7 +50,7 @@ defineCommand("-back"):
 
 
 proc game_load*(level: string, g: var gfx): bool =
-    localplayer.sprite = g.load_sprite("core/tex/uv.jpg")
+    localplayer.sprite = g.load_sprite("data/tram001_head.aseprite")
     true
 
 proc game_update*(dt: float, g: var gfx): seq[draw_info] =

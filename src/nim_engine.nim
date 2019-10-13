@@ -18,8 +18,6 @@ proc main() =
     var inpsys: input_system
     setControlCHook(sighandler)
 
-    discard ase.loadSprite("data/tram001_head.aseprite")
-
     inpsys.bindKey(K_w, "+forward")
     inpsys.bindKey(K_a, "+lstrafe")
     inpsys.bindKey(K_s, "+back")

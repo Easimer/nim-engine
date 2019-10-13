@@ -8,17 +8,30 @@ import vector
 import matrix
 import input
 import stb_image/read as stbi
+import ase
+import strutils
 
 type ShaderProgram = object
     shader_vertex: GLshaderID
     shader_fragment: GLshaderID
     program: GLprogramID
 
+type SpriteLayer = object
+    textureID: GLtexture
+
+type SpriteFrame = object
+    layers: seq[SpriteLayer]
+
+type Sprite = object
+    frames: seq[SpriteFrame]
+    currentFrame: int
+
+
 type gfx* = object
     wnd: window
     quad: GLVAO
     shaderSprite: ShaderProgram
-    sprites: seq[GLtexture]
+    sprites: seq[Sprite]
     mat_view: matrix4
 
 proc debugCallback(source: GLenum, msgtype: GLenum, id: GLuint, severity: GLenum, length: GLsizei, message: cstring, userParam: pointer) {.cdecl.} =
@@ -106,6 +119,8 @@ proc init*(g: var gfx) =
     gl.debugMessageCallback(debugCallback, nil)
     gl.clearColor(0.392, 0.584, 0.929, 1.0)
     gl.viewport(0, 0, 640, 480)
+    gl.enable(GL_BLEND)
+    gl.blendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA)
 
     g.quad = createQuad()
     g.shaderSprite = loadShaderProgramFromFile("core/shaders/sprite.vrtx.glsl", "core/shaders/sprite.frag.glsl")
@@ -133,26 +148,55 @@ proc draw*(g: var gfx, diseq: seq[draw_info]) =
     for di in diseq:
         let mat_world = translate(di.position)
         gl.uniformMatrix4fv(mvp_location, 1, GL_FALSE, value_ptr(g.mat_view * mat_world))
-        gl.bindTexture(GL_TEXTURE_2D, g.sprites[cast[uint32](di.sprite)])
-        gl.drawArrays(GL_TRIANGLES, 0, 6)
+        let sprite = g.sprites[cast[uint32](di.sprite)]
+        let spriteFrame = sprite.frames[sprite.currentFrame]
+        #for i in countdown(len(spriteFrame.layers) - 1, 0):
+        for i in countup(0, len(spriteFrame.layers) - 1):
+            gl.bindTexture(GL_TEXTURE_2D, spriteFrame.layers[i].textureID)
+            gl.drawArrays(GL_TRIANGLES, 0, 6)
 
-proc load_sprite*(g: var gfx, path: string): sprite_id =
-    var
-        width, height, channels: int
-        data: seq[uint8]
-        tex: GLtexture
-    
-    data = stbi.load(path, width, height, channels, stbi.Default)
-    
-    gl.genTextures(1, addr tex)
-    gl.bindTexture(GL_TEXTURE_2D, tex)
+proc uploadTexture(width: int, height: int, data: var seq[uint8]): GLtexture =
+    gl.genTextures(1, addr result)
+    gl.bindTexture(GL_TEXTURE_2D, result)
     gl.texParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT)
     gl.texParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT)
     gl.texParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR)
     gl.texParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST)
 
-    gl.texImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, addr data[0])
+    gl.texImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, addr data[0])
     gl.generateMipmap(GL_TEXTURE_2D)
 
+proc load_sprite*(g: var gfx, path: string): sprite_id =
+    var
+        s: Sprite
+
+
+    if path.endsWith(".aseprite"):
+        let img = ase.loadSprite(path)
+        let width = img.width
+        let height = img.height
+        for fidx in 0 .. img.numberOfFrames() - 1:
+            var frame: SpriteFrame
+            for lidx in 0 .. img.numberOfLayers(fidx) - 1:
+                var data = img.rasterizeLayer(fidx, lidx)
+                frame.layers.add:
+                    SpriteLayer(
+                        textureID: uploadTexture(width, height, data)
+                    )
+            s.frames.add(frame)
+
+    else:
+        # Non aseprite-image: 1 frame with 1 layer only
+        var
+            width, height, channels: int
+            data: seq[uint8]
+        data = stbi.load(path, width, height, channels, stbi.RGBA)
+        var layer = SpriteLayer(
+            textureID: uploadTexture(width, height, data)
+        )
+        var frame = SpriteFrame()
+        frame.layers.add(layer)
+        s.frames.add(frame)
+    
     result = cast[sprite_id](len(g.sprites))
-    g.sprites.add(tex)
+    g.sprites.add(s)

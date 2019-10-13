@@ -59,8 +59,11 @@ const
   GL_TEXTURE_MAG_FILTER* : GLenum = 0x2800
   GL_TEXTURE_MIN_FILTER* : GLenum = 0x2801
   GL_LINEAR_MIPMAP_LINEAR* : GLenum = 0x2703
-  GL_RGB*            : GLenum =  0x1907
-  GL_RGBA*           : GLenum =  0x1908
+  GL_RGB*            : GLenum = 0x1907
+  GL_RGBA*           : GLenum = 0x1908
+  GL_BLEND*          : GLenum = 0x0BE2
+  GL_SRC_ALPHA*      : GLenum = 0x0302
+  GL_ONE_MINUS_SRC_ALPHA* : GLenum = 0x0303
 
 #region loadGLAPI implementation
 
@@ -210,3 +213,4 @@ loadGLAPI:
   ("glTexImage2D", proc(target: GLenum, level: GLint, internalFormat: GLenum, width: GLsizei, height: GLsizei,
     border: GLint, format: GLenum, textype: GLenum, data: ptr uint8) {.cdecl.})
   ("glGenerateMipmap", proc(target: GLenum) {.cdecl.})
+  ("glBlendFunc", proc(sfactor: GLenum, dfactor: GLenum) {.cdecl.})
