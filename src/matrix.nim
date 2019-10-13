@@ -17,10 +17,12 @@ proc `*`*(lhs: matrix4, rhs: vec4): vec4 =
         result.w += lhs[col * 4 + 3] * rhs[col]
 
 proc `*`*(lhs: matrix4, rhs: matrix4): matrix4 =
-    for i in 0..3:
-        for j in 0..3:
-            result[i * 4 + j] = lhs[i * 4 + j] * rhs[j * 4 + i]
-
+    for row in 0..3:
+        for col in 0..3:
+            result[col * 4 + row] = 0
+            for i in 0..3:
+                result[col * 4 + row] += lhs[i * 4 + row] * rhs[col * 4 + i]
+    
 proc identity(): matrix4 =
     result[0] = 1
     result[5] = 1

@@ -5,13 +5,20 @@ import gfx
 import vector
 import commands
 
-type player = object
-    pos: vec4
+type Entity* = ref object of RootObj
+    pos*: vec4
+
+method update(ent: var Entity, dt: float) {.base.} = discard nil
+method draw(ent: var Entity, dt: float, drawInfoList: var seq[draw_info]) {.base.} = discard nil
+
+type Drawable* = ref object of Entity
+    sprite*: sprite_id
+
+type Player = ref object of Drawable
     vel: vec4
     acc: vec4
-    sprite: sprite_id
 
-proc update(p: var player, dt: float) =
+method update(p: var Player, dt: float) =
     p.vel += dt * p.acc
     p.pos += dt * p.vel
 
@@ -21,7 +28,10 @@ proc update(p: var player, dt: float) =
     zeroCheck(p.acc)
     zeroCheck(p.vel)
 
-var localplayer: player
+method draw(d: var Drawable, dt: float, drawInfoList: var seq[draw_info]) =
+    drawInfoList.drawAt(d.sprite, d.pos)
+
+var localplayer: Player
 
 defineCommand("+forward"):
     localplayer.acc.y = 8
@@ -48,18 +58,28 @@ defineCommand("+back"):
 defineCommand("-back"):
     localplayer.acc.y = 0
 
+var entities : seq[Entity]
+
+import ent_tram
 
 proc game_load*(level: string, g: var gfx): bool =
-    localplayer.sprite = g.load_sprite("data/tram001_head.aseprite")
+    var tram: Tram
+    new(localplayer)
+    new(tram)
+    tram.init(g)
+    localplayer.sprite = g.load_sprite("core/tex/uv.jpg")
+    entities.add(localplayer)
+    entities.add(tram)
     true
 
 proc game_update*(dt: float, g: var gfx): seq[draw_info] =
     var diseq: seq[draw_info]
-    localplayer.update(dt)
-    var di: draw_info
-    di.position = localplayer.pos
-    di.sprite = localplayer.sprite
 
-    result.add(di)
+    for i in 0 .. len(entities) - 1:
+        var ent = entities[i]
+        ent.update(dt)
+    for i in 0 .. len(entities) - 1:
+        var ent = entities[i]
+        ent.draw(dt, result)
 
 proc game_get_camera*(): vec4 = localplayer.pos
