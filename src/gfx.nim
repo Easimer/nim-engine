@@ -172,7 +172,7 @@ proc draw*(g: var gfx, diseq: seq[draw_info]) =
     g.shaderSprite.useProgram()
     let mvp_location = g.shaderSprite.program.getUniformLocation("matMVP")
     for di in diseq:
-        let mat_world = translate(di.position)
+        let mat_world = translate(di.position) * scale(di.width, di.height, 1)
         gl.uniformMatrix4fv(mvp_location, 1, GL_FALSE, value_ptr(g.mat_view * mat_world))
         let sprite = g.sprites[cast[uint32](di.sprite)]
         let spriteFrame = sprite.frames[sprite.currentFrame]

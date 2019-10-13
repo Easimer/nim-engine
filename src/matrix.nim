@@ -35,6 +35,14 @@ proc translate*(v: vec4): matrix4 =
     result[13] = v[1]
     result[14] = v[2]
 
+proc scale*(x: float, y: float, z: float): matrix4 =
+    result[0] = x
+    result[5] = y
+    result[10] = z
+    result[15] = 1
+
+proc scale*(v: vec4): matrix4 = scale(v.x, v.y, v.z)
+
 proc value_ptr*(mat: matrix4): array[16, float32] = cast[array[16, float32]](mat)
 
 proc rotateZ*(theta: float32): matrix4 =

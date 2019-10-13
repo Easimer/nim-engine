@@ -29,7 +29,7 @@ method update(p: var Player, dt: float) =
     zeroCheck(p.vel)
 
 method draw(d: var Drawable, dt: float, drawInfoList: var seq[draw_info]) =
-    drawInfoList.drawAt(d.sprite, d.pos)
+    drawInfoList.drawAt(d.sprite, d.pos, 0.5, 0.75)
 
 var localplayer: Player
 
