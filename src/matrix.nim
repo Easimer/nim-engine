@@ -3,7 +3,10 @@
 import math
 import vector
 
+## A module implementing a 4x4 floating-point matrix.
+
 type matrix4* = array[16, float32]
+    ## A 4x4 floating point matrix.
 
 proc `*`*(lhs: matrix4, rhs: vec4): vec4 =
     ## Calculates the product of a matrix and a vector.
