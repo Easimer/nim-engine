@@ -10,22 +10,35 @@ import input
 import stb_image/read as stbi
 import ase
 import strutils
+import tables
 
 type ShaderProgram = object
     shader_vertex: GLshaderID
     shader_fragment: GLshaderID
     program: GLprogramID
 
-type SpriteLayer = object
-    textureID: GLtexture
+type
+    SpriteLayerKind {.pure.} = enum
+        Image
+        Group
+
+    SpriteLayer = ref object
+        visible: bool
+        name: string
+        case kind: SpriteLayerKind
+        of SpriteLayerKind.Image:
+            textureID: GLtexture
+        of SpriteLayerKind.Group:
+            group: seq[SpriteLayer]
 
 type SpriteFrame = object
-    layers: seq[SpriteLayer]
+    rootGroup: SpriteLayer
+
+    layerNameCache: Table[string, SpriteLayer]
 
 type Sprite = object
     frames: seq[SpriteFrame]
     currentFrame: int
-
 
 type gfx* = object
     wnd: window
@@ -141,6 +154,19 @@ proc update*(g: var gfx, inpsys: var input_system): bool =
 proc move_camera*(g: var gfx, pos: vec4) =
     g.mat_view = translate(-pos)
 
+proc drawGroup(g: SpriteLayer) =
+    ## Draw a layer-group hierarchy recursively
+    assert g.kind == SpriteLayerKind.Group
+
+    if g.visible:
+        for layer in g.group:
+            case layer.kind:
+                of SpriteLayerKind.Group:
+                    drawGroup(layer)
+                of SpriteLayerKind.Image:
+                    gl.bindTexture(GL_TEXTURE_2D, layer.textureID)
+                    gl.drawArrays(GL_TRIANGLES, 0, 6)
+
 proc draw*(g: var gfx, diseq: seq[draw_info]) =
     gl.bindVertexArray(g.quad)
     g.shaderSprite.useProgram()
@@ -150,10 +176,7 @@ proc draw*(g: var gfx, diseq: seq[draw_info]) =
         gl.uniformMatrix4fv(mvp_location, 1, GL_FALSE, value_ptr(g.mat_view * mat_world))
         let sprite = g.sprites[cast[uint32](di.sprite)]
         let spriteFrame = sprite.frames[sprite.currentFrame]
-        #for i in countdown(len(spriteFrame.layers) - 1, 0):
-        for i in countup(0, len(spriteFrame.layers) - 1):
-            gl.bindTexture(GL_TEXTURE_2D, spriteFrame.layers[i].textureID)
-            gl.drawArrays(GL_TRIANGLES, 0, 6)
+        drawGroup(spriteFrame.rootGroup)
 
 proc uploadTexture(width: int, height: int, data: var seq[uint8]): GLtexture =
     gl.genTextures(1, addr result)
@@ -166,6 +189,43 @@ proc uploadTexture(width: int, height: int, data: var seq[uint8]): GLtexture =
     gl.texImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, addr data[0])
     gl.generateMipmap(GL_TEXTURE_2D)
 
+proc `*`[T](times: T, ch: char): string =
+    for i in 0..times-1:
+        result.add(ch)
+
+proc createLayerGroup(img: AsepriteImage, frameIndex: int, layerIndex: int, name: string, currentLevel: int = 0): SpriteLayer =
+    let lastLayer = img.numberOfLayers(frameIndex)
+    let width = img.width
+    let height = img.height
+
+    result = SpriteLayer(kind: SpriteLayerKind.Group)
+    result.visible = true
+
+    var layerIndex = layerIndex
+
+    while layerIndex < lastLayer:
+        let layerLevel = img.getLayerLevel(frameIndex, layerIndex)
+        let isGroup = img.isLayerGroup(frameIndex, layerIndex)
+        let layerName = img.layerName(frameIndex, layerIndex)
+
+        if layerLevel == currentLevel:
+            if isGroup:
+                echo((currentLevel * '\t') & "group " & layerName)
+                result.group.add(createLayerGroup(img, frameIndex, layerIndex + 1, layerName, currentLevel + 1))
+            else:
+                echo((currentLevel * '\t') & "loading layer " & layerName)
+                var data = img.rasterizeLayer(frameIndex, layerIndex)
+                result.group.add(SpriteLayer(
+                    kind: SpriteLayerKind.Image,
+                    name: layerName,
+                    textureID: uploadTexture(width, height, data)
+                ))
+
+        if layerLevel < currentLevel:
+            break
+
+        layerIndex += 1
+
 proc load_sprite*(g: var gfx, path: string): sprite_id =
     var
         s: Sprite
@@ -177,25 +237,25 @@ proc load_sprite*(g: var gfx, path: string): sprite_id =
         let height = img.height
         for fidx in 0 .. img.numberOfFrames() - 1:
             var frame: SpriteFrame
-            for lidx in 0 .. img.numberOfLayers(fidx) - 1:
-                var data = img.rasterizeLayer(fidx, lidx)
-                frame.layers.add:
-                    SpriteLayer(
-                        textureID: uploadTexture(width, height, data)
-                    )
+            var layerIndex = 0
+            frame.rootGroup = createLayerGroup(img, fidx, layerIndex, "<root>")
             s.frames.add(frame)
-
     else:
         # Non aseprite-image: 1 frame with 1 layer only
         var
             width, height, channels: int
             data: seq[uint8]
         data = stbi.load(path, width, height, channels, stbi.RGBA)
+        
         var layer = SpriteLayer(
-            textureID: uploadTexture(width, height, data)
+            kind: SpriteLayerKind.Image,
+            name: "<layer>",
+            textureID: uploadTexture(width, height, data),
+            visible: true
         )
         var frame = SpriteFrame()
-        frame.layers.add(layer)
+        frame.rootGroup = SpriteLayer(kind: SpriteLayerKind.Group, visible: true)
+        frame.rootGroup.group.add(layer)
         s.frames.add(frame)
     
     result = cast[sprite_id](len(g.sprites))
