@@ -202,9 +202,10 @@ proc createLayerGroup(img: AsepriteImage, frameIndex: int, layerIndex: int, name
     result.visible = true
 
     var layerIndex = layerIndex
+    var layerLevel = img.getLayerLevel(frameIndex, layerIndex)
 
-    while layerIndex < lastLayer:
-        let layerLevel = img.getLayerLevel(frameIndex, layerIndex)
+    while layerIndex < lastLayer and layerLevel >= currentLevel:
+        layerLevel = img.getLayerLevel(frameIndex, layerIndex)
         let isGroup = img.isLayerGroup(frameIndex, layerIndex)
         let layerName = img.layerName(frameIndex, layerIndex)
 
@@ -220,9 +221,6 @@ proc createLayerGroup(img: AsepriteImage, frameIndex: int, layerIndex: int, name
                     name: layerName,
                     textureID: uploadTexture(width, height, data)
                 ))
-
-        if layerLevel < currentLevel:
-            break
 
         layerIndex += 1
 
