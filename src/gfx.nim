@@ -31,7 +31,7 @@ type
         of SpriteLayerKind.Group:
             group: seq[SpriteLayer]
 
-type SpriteFrame = object
+type SpriteFrame = ref object
     rootGroup: SpriteLayer
 
     layerNameCache: Table[string, SpriteLayer]
@@ -40,11 +40,21 @@ type Sprite = object
     frames: seq[SpriteFrame]
     currentFrame: int
 
-type gfx* = object
+type
+    SpriteInstanceState = object
+        visible: bool
+    
+    SpriteInstance = ref object
+        baseSprite: int
+        layerStates: Table[string, SpriteInstanceState]
+
+type gfx* = ref object
     wnd: window
     quad: GLVAO
     shaderSprite: ShaderProgram
     sprites: seq[Sprite]
+    spriteFilenames: Table[string, int]
+    spriteInstances: seq[SpriteInstance]
     mat_view: matrix4
 
 proc debugCallback(source: GLenum, msgtype: GLenum, id: GLuint, severity: GLenum, length: GLsizei, message: cstring, userParam: pointer) {.cdecl.} =
@@ -123,9 +133,11 @@ proc createQuad(): GLVAO =
     gl.enableVertexAttribArray(1)
     
     arrays[0]
-    
+
+var gGfx*: gfx
 
 proc init*(g: var gfx) =
+    new(g)
     g.wnd = openWindow(640, 480)
     gl.load_functions(glGetProcAddress)
     gl.enable(GL_DEBUG_OUTPUT)
@@ -137,6 +149,7 @@ proc init*(g: var gfx) =
 
     g.quad = createQuad()
     g.shaderSprite = loadShaderProgramFromFile("core/shaders/sprite.vrtx.glsl", "core/shaders/sprite.frag.glsl")
+    gGfx = g
 
 proc destroy*(g: var gfx) =
     destroy(g.shaderSprite)
@@ -154,15 +167,48 @@ proc update*(g: var gfx, inpsys: var input_system): bool =
 proc move_camera*(g: var gfx, pos: vec4) =
     g.mat_view = translate(-pos)
 
-proc drawGroup(g: SpriteLayer) =
+proc isLayerVisibleInInstance(spriteInstance: SpriteInstance, layer: SpriteLayer): bool =
+    assert layer != nil
+    ## Determines whether a layer in a sprite instance is visible or not.
+    if layer.name in spriteInstance.layerStates:
+        spriteInstance.layerStates[layer.name].visible
+    else:
+        # Fallback to what the .aseprite file says about the layer
+        layer.visible
+
+proc findLayerInGroup(group: SpriteLayer, name: string): SpriteLayer =
+    assert group.kind == SpriteLayerKind.Group
+    for layer in group.group:
+        if layer.name == name:
+            return layer
+        else:
+            case layer.kind:
+                of SpriteLayerKind.Image: discard nil
+                of SpriteLayerKind.Group:
+                    let res = findLayerInGroup(layer, name)
+                    if res != nil: return res
+                
+
+proc findLayerByName(sprite: Sprite, name: string): SpriteLayer =
+    if not (name in sprite.frames[sprite.currentFrame].layerNameCache):
+        result = findLayerInGroup(sprite.frames[sprite.currentFrame].rootGroup, name)
+        if result != nil:
+            sprite.frames[sprite.currentFrame].layerNameCache[name] = result
+        else:
+            raise newException(IndexError, "Couldn't find layer '$1'!" % (name))
+    else:
+        result = sprite.frames[sprite.currentFrame].layerNameCache[name]
+        
+
+proc drawGroup(spriteInstance: SpriteInstance, g: SpriteLayer) =
     ## Draw a layer-group hierarchy recursively
     assert g.kind == SpriteLayerKind.Group
 
-    if g.visible:
-        for layer in g.group:
+    for layer in g.group:
+        if isLayerVisibleInInstance(spriteInstance, layer):
             case layer.kind:
                 of SpriteLayerKind.Group:
-                    drawGroup(layer)
+                    drawGroup(spriteInstance, layer)
                 of SpriteLayerKind.Image:
                     gl.bindTexture(GL_TEXTURE_2D, layer.textureID)
                     gl.drawArrays(GL_TRIANGLES, 0, 6)
@@ -174,9 +220,11 @@ proc draw*(g: var gfx, diseq: seq[draw_info]) =
     for di in diseq:
         let mat_world = translate(di.position) * scale(di.width, di.height, 1)
         gl.uniformMatrix4fv(mvp_location, 1, GL_FALSE, value_ptr(g.mat_view * mat_world))
-        let sprite = g.sprites[cast[uint32](di.sprite)]
+        let spriteInstance = g.spriteInstances[cast[uint32](di.sprite)]
+        let sprite = g.sprites[spriteInstance.baseSprite]
         let spriteFrame = sprite.frames[sprite.currentFrame]
-        drawGroup(spriteFrame.rootGroup)
+        if isLayerVisibleInInstance(spriteInstance, spriteFrame.rootGroup):
+            drawGroup(spriteInstance, spriteFrame.rootGroup)
 
 proc uploadTexture(width: int, height: int, data: var seq[uint8]): GLtexture =
     gl.genTextures(1, addr result)
@@ -193,13 +241,14 @@ proc `*`[T](times: T, ch: char): string =
     for i in 0..times-1:
         result.add(ch)
 
-proc createLayerGroup(img: AsepriteImage, frameIndex: int, layerIndex: int, name: string, currentLevel: int = 0): SpriteLayer =
+proc createLayerGroup(img: AsepriteImage, frameIndex: int, layerIndex: int, name: string, visible: bool, currentLevel: int = 0): SpriteLayer =
     let lastLayer = img.numberOfLayers(frameIndex)
     let width = img.width
     let height = img.height
 
     result = SpriteLayer(kind: SpriteLayerKind.Group)
-    result.visible = true
+    result.visible = visible
+    result.name = name
 
     var layerIndex = layerIndex
     var layerLevel = img.getLayerLevel(frameIndex, layerIndex)
@@ -208,26 +257,25 @@ proc createLayerGroup(img: AsepriteImage, frameIndex: int, layerIndex: int, name
         layerLevel = img.getLayerLevel(frameIndex, layerIndex)
         let isGroup = img.isLayerGroup(frameIndex, layerIndex)
         let layerName = img.layerName(frameIndex, layerIndex)
+        let isVisible = img.isLayerVisible(frameIndex, layerIndex)
 
         if layerLevel == currentLevel:
             if isGroup:
-                echo((currentLevel * '\t') & "group " & layerName)
-                result.group.add(createLayerGroup(img, frameIndex, layerIndex + 1, layerName, currentLevel + 1))
+                result.group.add(createLayerGroup(img, frameIndex, layerIndex + 1, layerName, isVisible, currentLevel + 1))
             else:
-                echo((currentLevel * '\t') & "loading layer " & layerName)
                 var data = img.rasterizeLayer(frameIndex, layerIndex)
                 result.group.add(SpriteLayer(
                     kind: SpriteLayerKind.Image,
                     name: layerName,
-                    textureID: uploadTexture(width, height, data)
+                    textureID: uploadTexture(width, height, data),
+                    visible: isVisible
                 ))
 
         layerIndex += 1
 
-proc load_sprite*(g: var gfx, path: string): sprite_id =
+proc loadNewSprite*(g: var gfx, path: string): int =
     var
         s: Sprite
-
 
     if path.endsWith(".aseprite"):
         let img = ase.loadSprite(path)
@@ -236,7 +284,8 @@ proc load_sprite*(g: var gfx, path: string): sprite_id =
         for fidx in 0 .. img.numberOfFrames() - 1:
             var frame: SpriteFrame
             var layerIndex = 0
-            frame.rootGroup = createLayerGroup(img, fidx, layerIndex, "<root>")
+            new(frame)
+            frame.rootGroup = createLayerGroup(img, fidx, layerIndex, "<root>", true)
             s.frames.add(frame)
     else:
         # Non aseprite-image: 1 frame with 1 layer only
@@ -251,10 +300,42 @@ proc load_sprite*(g: var gfx, path: string): sprite_id =
             textureID: uploadTexture(width, height, data),
             visible: true
         )
-        var frame = SpriteFrame()
+        var frame: SpriteFrame
+        new(frame)
         frame.rootGroup = SpriteLayer(kind: SpriteLayerKind.Group, visible: true)
         frame.rootGroup.group.add(layer)
         s.frames.add(frame)
     
-    result = cast[sprite_id](len(g.sprites))
+    result = len(g.sprites)
+    g.spriteFilenames[path] = result
     g.sprites.add(s)
+
+proc load_sprite*(g: var gfx, path: string): sprite_id =
+    var spriteIdx: int
+    if not (path in g.spriteFilenames):
+        spriteIdx = g.loadNewSprite(path)
+    else:
+        spriteIdx = g.spriteFilenames[path]
+    
+    result = cast[sprite_id](len(g.spriteInstances))
+    
+    var inst: SpriteInstance
+    new(inst)
+    inst = SpriteInstance(
+        baseSprite: spriteIdx,
+    )
+    g.spriteInstances.add(inst)
+
+proc getLayerVisible*(g: var gfx, sprite: sprite_id, name: string): bool =
+    var instance = g.spriteInstances[sprite.uint32]
+    isLayerVisibleInInstance(instance, findLayerByName(g.sprites[instance.baseSprite], name))
+
+proc setLayerVisible*(g: var gfx, sprite: sprite_id, name: string, visible: bool) =
+    var instance = g.spriteInstances[sprite.uint32]
+    if name in instance.layerStates:
+        instance.layerStates[name].visible = visible
+    else:
+        instance.layerStates[name] = SpriteInstanceState(
+            visible: visible
+        )
+    assert getLayerVisible(g, sprite, name) == visible
