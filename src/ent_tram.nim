@@ -18,7 +18,7 @@ proc init*(d: var Tram, g: var Gfx) =
 
 method update(t: var Tram, dt: float) =
   t.timer += dt
-  if t.timer > 1.0:
+  if t.timer > 0.25:
     t.timer = 0
     let carIdx = rand(t.spriteCars.len - 1)
     let visible = gGfx.getLayerVisible(t.spriteCars[carIdx], "Buttons - Green")
@@ -27,4 +27,4 @@ method update(t: var Tram, dt: float) =
 method draw(t: var Tram, dt: float, drawInfoList: var seq[draw_info]) =
   drawInfoList.drawAt(t.sprite_head, t.pos)
   for i, spriteCar in t.spriteCars:
-    drawInfoList.drawAt(spriteCar, t.pos + vec4(x: -i.float, y: 0, z: 0, w: 0))
+    drawInfoList.drawAt(spriteCar, t.pos + vec4(x: -1 - i.float, y: 0, z: 0, w: 0))
