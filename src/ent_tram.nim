@@ -11,7 +11,7 @@ type Tram* = ref object of Entity
   spriteCars: seq[sprite_id]
   timer: float
 
-proc init*(d: var Tram, g: var gfx) =
+proc init*(d: var Tram, g: var Gfx) =
   d.sprite_head = gGfx.load_sprite("data/tram001_head.aseprite")
   for i in 0..3:
     d.spriteCars.add(gGfx.load_sprite("data/tram001_car.aseprite"))

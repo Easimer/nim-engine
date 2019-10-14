@@ -17,6 +17,8 @@ proc sighandler() {.noconv.} =
 
 proc main() =
     var inpsys: input_system
+    var g: Gfx
+
     setControlCHook(sighandler)
 
     randomize()
@@ -26,7 +28,6 @@ proc main() =
     inpsys.bindKey(K_s, "+back")
     inpsys.bindKey(K_d, "+rstrafe")
 
-    var g: gfx
     g.init()
 
     var frame_start = sdl2.getPerformanceCounter()
@@ -34,7 +35,7 @@ proc main() =
 
     if game.game_load("none", g):
         while not exit:
-            let dt: float = cast[float](frame_end - frame_start) / cast[float](sdl2.getPerformanceFrequency())
+            let dt: float = float(frame_end - frame_start) / sdl2.getPerformanceFrequency().float
             frame_start = sdl2.getPerformanceCounter()
             exit = g.update(inpsys)
             g.clear()

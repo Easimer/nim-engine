@@ -62,7 +62,7 @@ var entities : seq[Entity]
 
 import ent_tram
 
-proc game_load*(level: string, g: var gfx): bool =
+proc game_load*(level: string, g: var Gfx): bool =
     var tram: Tram
     new(localplayer)
     new(tram)
@@ -72,7 +72,7 @@ proc game_load*(level: string, g: var gfx): bool =
     entities.add(tram)
     true
 
-proc game_update*(dt: float, g: var gfx): seq[draw_info] =
+proc game_update*(dt: float, g: var Gfx): seq[draw_info] =
     var diseq: seq[draw_info]
 
     for i in 0 .. len(entities) - 1:
