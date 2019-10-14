@@ -313,6 +313,7 @@ proc loadNewSprite*(g: var gfx, path: string): int =
 proc load_sprite*(g: var gfx, path: string): sprite_id =
     var spriteIdx: int
     if not (path in g.spriteFilenames):
+        echo("Loading " & path)
         spriteIdx = g.loadNewSprite(path)
     else:
         spriteIdx = g.spriteFilenames[path]

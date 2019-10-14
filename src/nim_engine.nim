@@ -7,6 +7,7 @@ import vector
 import game
 import gfx
 import ase
+import random
 
 var exit = false
 
@@ -17,6 +18,8 @@ proc sighandler() {.noconv.} =
 proc main() =
     var inpsys: input_system
     setControlCHook(sighandler)
+
+    randomize()
 
     inpsys.bindKey(K_w, "+forward")
     inpsys.bindKey(K_a, "+lstrafe")
