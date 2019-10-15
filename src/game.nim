@@ -67,7 +67,7 @@ proc game_load*(level: string, g: var Gfx): bool =
     new(localplayer)
     new(tram)
     tram.init(g)
-    localplayer.sprite = g.load_sprite("core/tex/uv.jpg")
+    localplayer.sprite = g.load_sprite("data/player.aseprite")
     entities.add(localplayer)
     entities.add(tram)
     true

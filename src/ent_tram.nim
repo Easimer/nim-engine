@@ -25,6 +25,6 @@ method update(t: var Tram, dt: float) =
     gGfx.setLayerVisible(t.spriteCars[carIdx], "Buttons - Green", not visible)
 
 method draw(t: var Tram, dt: float, drawInfoList: var seq[draw_info]) =
-  drawInfoList.drawAt(t.sprite_head, t.pos)
+  drawInfoList.drawAt(t.sprite_head, t.pos, 1.25, 1)
   for i, spriteCar in t.spriteCars:
-    drawInfoList.drawAt(spriteCar, t.pos + vec4(x: -1 - i.float, y: 0, z: 0, w: 0))
+    drawInfoList.drawAt(spriteCar, t.pos + vec4(x: -1.125 - i.float, y: 0, z: 0, w: 0))

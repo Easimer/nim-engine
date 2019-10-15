@@ -33,7 +33,7 @@ type
 
 type SpriteFrame = ref object
     rootGroup: SpriteLayer
-
+    duration: int
     layerNameCache: Table[string, SpriteLayer]
 
 type Sprite = object
@@ -46,6 +46,8 @@ type
     
     SpriteInstance = ref object
         baseSprite: int
+        currentFrame: int
+        currentTime: int
         layerStates: Table[string, SpriteInstanceState]
 
 type Gfx* = ref object
@@ -281,6 +283,7 @@ proc loadNewSprite*(g: var Gfx, path: string): int =
             var frame: SpriteFrame
             var layerIndex = 0
             new(frame)
+            frame.duration = img.getFrameDuration(fidx)
             frame.rootGroup = createLayerGroup(img, fidx, layerIndex, "<root>", true)
             s.frames.add(frame)
     else:
@@ -336,3 +339,15 @@ proc setLayerVisible*(g: var Gfx, sprite: sprite_id, name: string, visible: bool
             visible: visible
         )
     assert getLayerVisible(g, sprite, name) == visible
+
+proc stepAnimation*(g: var Gfx, sprite: sprite_id, deltaTime: float) =
+    var instance = g.spriteInstances[sprite.uint32]
+    instance.currentTime += int(deltaTime * 1000)
+    let sprite = g.sprites[instance.baseSprite]
+
+    while instance.currentTime >= sprite.frames[instance.currentFrame].duration:
+        instance.currentFrame += 1
+        instance.currentTime -= sprite.frames[instance.currentFrame].duration
+
+        if instance.currentFrame >= len(sprite.frames):
+            instance.currentFrame = 0
