@@ -340,14 +340,17 @@ proc setLayerVisible*(g: var Gfx, sprite: sprite_id, name: string, visible: bool
         )
     assert getLayerVisible(g, sprite, name) == visible
 
-proc stepAnimation*(g: var Gfx, sprite: sprite_id, deltaTime: float) =
+proc stepAnimation*(g: var Gfx, sprite: sprite_id, deltaTime: float): bool =
+    ## Returns true if the animation has started over.
     var instance = g.spriteInstances[sprite.uint32]
     instance.currentTime += int(deltaTime * 1000)
     let sprite = g.sprites[instance.baseSprite]
+    result = false
 
     while instance.currentTime >= sprite.frames[instance.currentFrame].duration:
         instance.currentFrame += 1
         instance.currentTime -= sprite.frames[instance.currentFrame].duration
 
         if instance.currentFrame >= len(sprite.frames):
+            result = true
             instance.currentFrame = 0
