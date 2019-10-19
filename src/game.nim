@@ -4,6 +4,7 @@ import draw_info
 import gfx
 import vector
 import commands
+import animctl
 
 type Entity* = ref object of RootObj
     pos*: vec4
@@ -17,6 +18,7 @@ type Drawable* = ref object of Entity
 type Player = ref object of Drawable
     vel: vec4
     acc: vec4
+    animctl: AnimControllerPlayer
 
 method update(p: var Player, dt: float) =
     p.vel += dt * p.acc
@@ -27,6 +29,9 @@ method update(p: var Player, dt: float) =
 
     zeroCheck(p.acc)
     zeroCheck(p.vel)
+
+    p.animctl.stateTransition(dt)
+    p.sprite = p.animctl.getSprite()
 
 method draw(d: var Drawable, dt: float, drawInfoList: var seq[draw_info]) =
     drawInfoList.drawAt(d.sprite, d.pos, 0.5, 0.75)
@@ -51,7 +56,6 @@ defineCommand("+rstrafe"):
 defineCommand("-rstrafe"):
     localplayer.acc.x = 0
 
-
 defineCommand("+back"):
     localplayer.acc.y = -8
 
@@ -66,15 +70,13 @@ proc game_load*(level: string, g: var Gfx): bool =
     var tram: Tram
     new(localplayer)
     new(tram)
+    localplayer.init()
     tram.init(g)
-    localplayer.sprite = g.load_sprite("data/player.aseprite")
     entities.add(localplayer)
     entities.add(tram)
     true
 
 proc game_update*(dt: float, g: var Gfx): seq[draw_info] =
-    var diseq: seq[draw_info]
-
     for i in 0 .. len(entities) - 1:
         var ent = entities[i]
         ent.update(dt)
